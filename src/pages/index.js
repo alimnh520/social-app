@@ -46,14 +46,14 @@ export default function LiveChat() {
 
   return (
     <div className="p-6 space-y-4">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex gap-x-2 items-center justify-center">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="border px-4 py-2 rounded"
           placeholder="Type your message..."
         />
-        <button className="ml-2 px-4 py-2 bg-pink-500 text-white rounded">Send</button>
+        <button className="px-4 py-2 bg-pink-500 text-white rounded">Send</button>
       </form>
 
       <div className="space-y-2">
