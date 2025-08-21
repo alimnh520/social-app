@@ -20,7 +20,52 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #13050a;
+  color: white;
+}
+.love {
+  position: fixed;
+  background-color: red;
+  transform: rotate(-135deg);
+  animation: love linear infinite;
+  opacity: 0;
+  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.6));
+}
+
+@keyframes love {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.love::before,
+.love::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: red;
+  border-radius: 50%;
+}
+.love::before {
+  top: var(--before-top);
+  left: 0;
+}
+.love::after {
+  left: var(--after-left);
+  top: 0;
+}
+.dashboard::-webkit-scrollbar {
+  display: none;
+}
+.home::-webkit-scrollbar {
+  display: none;
 }
