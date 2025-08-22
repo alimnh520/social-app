@@ -6,7 +6,8 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     image: { type: String, required: false },
     imageId: { type: String, required: false },
+    notification: [String],
 
-}, {timestamps: true});
+}, { timestamps: true });
 
 export default mongoose.models.MyProfile || mongoose.model('MyProfile', UserSchema);

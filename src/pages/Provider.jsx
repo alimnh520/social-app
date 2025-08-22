@@ -40,7 +40,7 @@ const Provider = ({ children }) => {
             try {
                 const res = await fetch('/api/user/data', { method: 'GET' });
                 const data = await res.json();
-                setData(data.message);
+                if (data.success) setData(data.message);
             } catch (error) {
                 console.log(error);
             }
@@ -51,7 +51,7 @@ const Provider = ({ children }) => {
 
     return (
         <div className='w-full h-auto overflow-x-hidden relative scroll-smooth' ref={mainDiv}>
-            <UserContext.Provider value=''>
+            <UserContext.Provider value={data}>
                 {!hideHeader.includes(path) && <Header />}
                 {children}
             </UserContext.Provider>

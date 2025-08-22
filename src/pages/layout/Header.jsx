@@ -1,4 +1,5 @@
 'use client'
+import { IoIosNotifications } from "react-icons/io";
 import { FaFacebookMessenger } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { IoMdPhotos } from "react-icons/io";
@@ -48,9 +49,16 @@ const Header = () => {
             <div className={`flex h-[60px] gap-x-8 items-center justify-center relative max-sm:w-full max-sm:justify-between ${bungeeTint.className}`}>
                 <p className="text-3xl font-extrabold drop-shadow-[0_0_7px_#d31158]">ALBUM</p>
                 <div className="flex items-center justify-center gap-x-3">
-                    <Link href='/components/search' className={`text-3xl ${pathName === '/components/search' && 'text-white'}`} onClick={() => setShowMenu(false)}><GoSearch /></Link>
+                    <button className={`text-3xl`} onClick={() => setShowMenu(false)}><GoSearch /></button>
                     <div className="h-6 w-0.5 bg-[#d31158]"></div>
-                    <Link href='/components/search' className={`text-[26px] ${pathName === '/components/search' && 'text-white'}`} onClick={() => setShowMenu(false)}><FaFacebookMessenger /></Link>
+                    <div className="relative">
+                        {user?.notification?.length > 0 && (
+                            <p className="px-1 text-sm flex items-center justify-center font-serif pb-1 bg-white rounded-md absolute -top-2.5 -right-2">{user?.notification.length > 99 ? '99+' : user?.notification}</p>
+                        )}
+                        <button className={`text-3xl`}><IoIosNotifications /></button>
+                    </div>
+                    <div className="h-6 w-0.5 bg-[#d31158]"></div>
+                    <Link href='/components/message' className={`text-[26px] ${pathName === '/components/search' && 'text-white'}`} onClick={() => setShowMenu(false)}><FaFacebookMessenger /></Link>
                 </div>
             </div>
 
@@ -71,7 +79,7 @@ const Header = () => {
                     <li>
                         {
                             user ? (
-                                <Link href="/user/dashboard" className={`flex items-center text-3xl ${pathName === '/components/dashboard' && 'text-white'}`} onClick={() => setShowMenu(false)}>
+                                <Link href="/user/dashboard" className={`flex items-center text-3xl ${pathName === '/user/dashboard' && 'text-white bg-[#d3115862] rounded-full'}`} onClick={() => setShowMenu(false)}>
                                     <div className="relative">
                                         <img src={user.image ? user.image : '/no-image-icon-4.png'} className='size-9 rounded-full object-cover object-center' />
                                         <div className="absolute text-white bottom-0 right-0 text-sm">
