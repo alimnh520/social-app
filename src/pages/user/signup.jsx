@@ -46,9 +46,9 @@ const LoginForm = () => {
         setLoading(false);
     };
 
-    const handleSignIn = async () => {
+    const handleSignIn = async (provider) => {
         setLoading(true);
-        await signIn('google', { redirect: false, callbackUrl: '/user/dashboard' });
+        const res = await signIn(provider, { redirect: false, callbackUrl: '/' });
         setLoading(false);
     };
 
@@ -151,7 +151,7 @@ const LoginForm = () => {
                     <div className="flex gap-4">
                         <button
                             type="button"
-                            onClick={handleSignIn}
+                            onClick={() => handleSignIn('google')}
                             className="w-1/2 flex items-center justify-center gap-2 py-2 bg-white text-black rounded-lg hover:shadow-lg"
                         >
                             <FcGoogle className="text-2xl" />
@@ -159,7 +159,7 @@ const LoginForm = () => {
 
                         <button
                             type="button"
-                            onClick={handleSignIn}
+                            onClick={() => handleSignIn('facebook')}
                             className="w-1/2 flex items-center justify-center gap-2 py-2 bg-white text-blue-600 rounded-lg hover:shadow-lg"
                         >
                             <FaFacebookF className="text-2xl" />

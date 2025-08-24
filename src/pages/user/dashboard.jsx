@@ -334,7 +334,7 @@ const page = () => {
                     {
                         myPost ? myPost.slice().reverse().map((elem, index) => {
                             return (
-                                <div className="w-full h-auto max-w-xl bg-white rounded-2xl shadow-md border border-gray-200 p-4 space-y-4">
+                                <div className="w-full h-auto max-w-xl bg-white rounded-2xl shadow-md border border-gray-200 p-4 space-y-4" key={index}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">

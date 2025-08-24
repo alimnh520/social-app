@@ -76,9 +76,7 @@ const OTPVerification = () => {
             });
             const data = await res.json();
             setMessage(data.message);
-            if (data.success) {
-                router.push('/user/dashboard');
-            }
+            if (data.success) window.location.reload();
         } catch (err) {
             console.error(err);
         } finally {

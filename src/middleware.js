@@ -5,16 +5,16 @@ export function middleware(req) {
     const otp = req.cookies.get('otp')?.value;
     const accessToken = req.cookies.get('user-token')?.value;
 
+    const accessPath = ['/user/signin' , '/user/signup' , '/user/verify'];
+    const avoidPath = ['/user/dashboard']
+
     if (!otp && pathName === '/user/verify') {
         return NextResponse.redirect(new URL('/', req.url));
     }
-    if (!accessToken && pathName === '/user/dashboard') {
+    if (!accessToken && avoidPath.includes(pathName)) {
         return NextResponse.redirect(new URL('/user/signin', req.url));
     }
-    if (accessToken && pathName === '/user/signin') {
-        return NextResponse.redirect(new URL('/user/dashboard', req.url));
-    }
-    if (accessToken && pathName === '/user/signup') {
+    if (accessToken && accessPath.includes(pathName)) {
         return NextResponse.redirect(new URL('/user/dashboard', req.url));
     }
 }

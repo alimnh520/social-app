@@ -42,7 +42,7 @@ const LoginPage = () => {
 
     const handleSignIn = async (provider) => {
         setLoading(true);
-        await signIn(provider, { redirect: false, callbackUrl: '/components/dashboard' });
+        const res = await signIn(provider, { redirect: false, callbackUrl: '/' });
         setLoading(false);
     };
 
