@@ -1,8 +1,9 @@
 const { default: mongoose } = require("mongoose");
 
 const PostSchema = new mongoose.Schema({
+
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         required: true,
     },
 
@@ -27,11 +28,13 @@ const PostSchema = new mongoose.Schema({
         type: String,
     },
 
-    likes: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-        },
-    ],
+    imageType: {
+        type: String,
+    },
+
+    likes: [String],
+
+    comments: [String],
 
 }, { timestamps: true });
 

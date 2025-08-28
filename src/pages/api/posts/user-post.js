@@ -1,13 +1,11 @@
 import { mongoClient } from '@/lib/mongoDb/mongoclient';
-import jwt from 'jsonwebtoken'
-import { ObjectId } from 'mongodb';
 export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
-            const userCookie = req.cookies['user-token'];
-            const decodedUser = jwt.verify(userCookie, process.env.JWT_SECRET);
+            const collection = (await mongoClient()).collection('posts');
+            const userPost = await collection.find({}).toArray();
+            res.status(202).json({ message: userPost, success: true });
 
-            res.status(202).json({ message: decodedUser.data, success: true });
         } catch (error) {
             console.log(error);
             res.status(404).json({ message: '', success: false });

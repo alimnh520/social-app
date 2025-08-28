@@ -35,7 +35,7 @@ export default async function handler(req, res) {
                 });
                 await user.save();
 
-                const decodedId = jwt.sign({id: user._id}, process.env.JWT_SECRET);
+                const decodedId = jwt.sign({ user }, process.env.JWT_SECRET, {expiresIn: '1d'});
 
                 res.setHeader('Set-Cookie', [
                     'otp=; HttpOnly; Path=/; Max-Age=0;',

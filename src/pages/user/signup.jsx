@@ -11,6 +11,8 @@ import { FcGoogle } from 'react-icons/fc';
 const LoginForm = () => {
     const [username, setUserName] = useState('');
     const [email, setEmail] = useState('');
+    const [mobile, setMobile] = useState('');
+    const [method, setMethod] = useState("email");
     const [password, setPassword] = useState('');
     const [eye, setEye] = useState(false);
     const [message, setMessage] = useState('');
@@ -30,7 +32,7 @@ const LoginForm = () => {
             const response = await fetch('/api/user/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password }),
+                body: JSON.stringify({ username, email, password, method }),
             });
             const data = await response.json();
             setMessage(data.message);
@@ -73,6 +75,33 @@ const LoginForm = () => {
                     </div>
                 )}
 
+                <div className="flex items-center justify-center gap-6 mb-6">
+                    <label htmlFor="email" className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500 cursor-pointer  ${method === 'email' && 'bg-purple-600'} hover:bg-purple-600 hover:text-white transition`}>
+                        <input
+                            type="radio"
+                            id="email"
+                            name="loginMethod"
+                            value="email"
+                            checked={method === "email"}
+                            onChange={() => setMethod("email")}
+                            className="accent-purple-700"
+                        />
+                        <p >Email</p>
+                    </label>
+                    <label htmlFor="mobile" className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500 cursor-pointer hover:bg-[rgba(0,255,0,0.56)] ${method === 'mobile' && 'bg-[rgba(0,255,0,0.56)]'} hover:text-white transition`}>
+                        <input
+                            type="radio"
+                            id="mobile"
+                            name="loginMethod"
+                            value="mobile"
+                            checked={method === "mobile"}
+                            onChange={() => setMethod("mobile")}
+                            className="accent-green-600"
+                        />
+                        <p>Mobile</p>
+                    </label>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label htmlFor="username" className="block text-sm font-medium mb-1">
@@ -89,20 +118,40 @@ const LoginForm = () => {
                         />
                     </div>
 
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium mb-1">
-                            Email Address
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 border border-white/30 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                        />
-                    </div>
+                    {method === 'email' ? (
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium mb-1">
+                                Email Address
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 border border-white/30 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                            />
+                        </div>
+                    ) : (
+                        <div>
+                            <label htmlFor="mobile" className="block text-sm font-medium mb-1">
+                                Mobile Number
+                            </label>
+                            <div className="flex items-center justify-center gap-x-3">
+                                <input type="text" className='w-3/12 px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30' disabled value={'+880'} />
+                                <input
+                                    id="mobile"
+                                    name="mobile"
+                                    type="number"
+                                    required
+                                    value={mobile}
+                                    onChange={(e) => setMobile(e.target.value)}
+                                    className="w-9/12 px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 border border-white/30 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium mb-1">
@@ -142,13 +191,13 @@ const LoginForm = () => {
                         Sign Up
                     </button>
 
-                    <div className="flex items-center justify-between gap-4 my-3">
+                    {/* <div className="flex items-center justify-between gap-4 my-3">
                         <div className="flex-1 h-px bg-white/40" />
                         <span className="text-sm">or</span>
                         <div className="flex-1 h-px bg-white/40" />
-                    </div>
+                    </div> */}
 
-                    <div className="flex gap-4">
+                    {/* <div className="flex gap-4">
                         <button
                             type="button"
                             onClick={() => handleSignIn('google')}
@@ -164,7 +213,7 @@ const LoginForm = () => {
                         >
                             <FaFacebookF className="text-2xl" />
                         </button>
-                    </div>
+                    </div> */}
                 </form>
             </div>
         </div>

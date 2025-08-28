@@ -1,4 +1,8 @@
 'use client'
+import { io } from "socket.io-client";
+import { FaRegEdit } from "react-icons/fa";
+import { MdDelete } from "react-icons/md";
+import { BiSolidLike } from "react-icons/bi";
 import { IoMdLogOut } from "react-icons/io";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { MdModeEditOutline } from "react-icons/md";
@@ -6,11 +10,14 @@ import Link from 'next/link';
 import React, { useContext, useEffect, useState } from 'react';
 import { RxCross2 } from "react-icons/rx";
 import { format } from "timeago.js";
-import { FaComment, FaHeart } from "react-icons/fa";
+import { FaComment, FaHeart, FaShare } from "react-icons/fa";
 import { UserContext } from "../Provider";
 
+let socket;
+
 const page = () => {
-    const user = useContext(UserContext);
+    const context = useContext(UserContext);
+    const user = context?.data;
 
     // const fontImage = newImage && URL.createObjectURL(newImage);
     const [message, setMessage] = useState('');
@@ -21,10 +28,14 @@ const page = () => {
     const [newImage, setNewImage] = useState(null);
     const [newName, setNewName] = useState('');
     const [post, setPost] = useState('');
-    const [upload, setUpload] = useState(false);
+
     const [postImage, setPostImage] = useState('');
     const [postText, setPostText] = useState('');
     const [postBox, setPostBox] = useState(false);
+
+    const [postMenu, setPostMenu] = useState(false);
+    const [deletePost, setDeletePost] = useState(false);
+    const [editPost, setEditPost] = useState(false);
 
     const fontImage = editImage && newImage ? URL.createObjectURL(newImage) : null;
 
@@ -34,62 +45,33 @@ const page = () => {
         }, 1500);
     }
 
-    const myPost = [
-        {
-            username: "Nahid Hasan",
-            userImage: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s",
-            createdAt: '12 june 2025', // or string date
-            text: "এইটা আমার প্রথম পোস্ট সোনা 💙",
-            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s",
-        },
-        {
-            username: "Nahid Hasan",
-            userImage: "",
-            createdAt: '12 june 2025', // or string date
-            text: "এইটা আমার প্রথম পোস্ট সোনা 💙",
-            image: "",
-        },
-        {
-            username: "Nahid Hasan",
-            userImage: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s",
-            createdAt: '12 june 2025', // or string date
-            text: "এইটা আমার প্রথম পোস্ট সোনা 💙",
-            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s",
-        },
-        {
-            username: "Nahid Hasan",
-            userImage: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s",
-            createdAt: '12 june 2025', // or string date
-            text: "এইটা আমার প্রথম পোস্ট সোনা 💙",
-            image: "",
-        },
-        {
-            username: "Nahid Hasan",
-            userImage: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s",
-            createdAt: '12 june 2025', // or string date
-            text: "এইটা আমার প্রথম পোস্ট সোনা 💙",
-            image: "https://static.vecteezy.com/system/resources/thumbnails/045/709/332/small/girl-portrait-of-beauty-model-with-natural-face-make-up-skincare-and-wellness-close-up-white-background-beautiful-young-sweet-lady-face-on-white-smooth-and-clean-perfect-skin-photo.jpg",
-        }
-    ];
-
-
     // user post fetch
 
     useEffect(() => {
+
         const fetchData = async () => {
             try {
-                const res = await fetch('/api/post/my-post', {
+                const res = await fetch('/api/posts/my-post', {
                     method: 'GET'
                 });
                 const data = await res.json();
-                if (data.success) {
-                    setPost(data.message);
-                }
+                if (data.success) setPost(data.message);
             } catch (error) {
                 console.log(error);
             }
         }
         fetchData();
+
+        fetch("/api/socket");
+
+        socket = io({ path: "/api/socket_io" });
+
+        socket.on("newPost", (post) => {
+            setPost((prev) => [...prev, post]);
+        });
+
+        return () => socket.disconnect();
+
     }, []);
 
     if (user) {
@@ -138,6 +120,63 @@ const page = () => {
 
             const data = await res.json();
             if (data.success) window.location.reload();
+
+        } catch (error) {
+            console.log(error);
+        }
+        setLoading(false);
+    }
+
+    // upload a post 
+
+    const handleUploadPost = async () => {
+        setLoading(true);
+        try {
+            if (postImage) {
+                if ((postImage.size / 1048576) > 30) {
+                    setLoading(false);
+                    setMessage('File size is too large');
+                    return
+                }
+                const formData = new FormData();
+                formData.append("file", postImage);
+                formData.append("upload_preset", "my_album_preset");
+                formData.append("folder", "love");
+
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/${postImage?.type === 'video/mp4' ? 'video' : 'image'}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const uploadResult = await response.json();
+
+                const res = await fetch('/api/posts/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ postText, imageType: postImage?.type, post_url: uploadResult.secure_url, post_id: uploadResult.public_id })
+                });
+                setLoading(false);
+                const data = await res.json();
+                setMessage(data.message);
+                if (data.success) {
+                    setPostBox(false);
+                    setPostImage('');
+                    setPostText('')
+                }
+
+            } else {
+                const res = await fetch('/api/posts/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ postText })
+                });
+                const data = await res.json();
+                setMessage(data.message);
+                if (data.success) {
+                    setPostBox(false);
+                    setPostImage('');
+                    setPostText('')
+                }
+            }
 
         } catch (error) {
             console.log(error);
@@ -254,7 +293,7 @@ const page = () => {
                         }}
                         className="w-full bg-green-600 text-white text-sm px-4 py-2 rounded-full shadow hover:bg-green-700 transition"
                     >
-                        Upload
+                        Upload a post 💌
                     </button>
 
                     <button
@@ -266,7 +305,6 @@ const page = () => {
 
 
                 </div>
-
 
             </div>
 
@@ -303,7 +341,7 @@ const page = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h10a4 4 0 004-4M7 10l5 5 5-5" />
                                     </svg>
                                     Upload Image
-                                    <input type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={(e) => setPostImage(e.target.files[0])} />
+                                    <input type="file" className="hidden" onChange={(e) => setPostImage(e.target.files[0])} />
                                 </label>
                                 {postImage && <button className="cursor-pointer border border-blue-400 hover:border-blue-600 text-blue-600 hover:text-blue-800 px-4 py-2 rounded-lg text-sm" onClick={() => setPostImage('')}>cancel</button>}
                             </div>
@@ -311,17 +349,25 @@ const page = () => {
                             {/* Image Preview */}
                             {postImage && (
                                 <div className="w-full rounded-lg overflow-hidden border border-blue-300 shadow">
-                                    <img
-                                        src={URL.createObjectURL(postImage)}
-                                        alt="Preview"
-                                        className="w-full max-h-96 object-contain"
-                                    />
+                                    {
+                                        postImage?.type === 'video/mp4' ? (
+                                            <video controls className="w-full max-h-96 object-contain">
+                                                <source src={URL.createObjectURL(postImage)} type='video/mp4' />
+                                            </video>
+                                        ) : (
+                                            <img
+                                                src={URL.createObjectURL(postImage)}
+                                                alt="Preview"
+                                                className="w-full max-h-96 object-contain"
+                                            />
+                                        )
+                                    }
                                 </div>
                             )}
 
                             {/* Post Button */}
                             <button
-                                onClick={'handlePost'}
+                                onClick={handleUploadPost}
                                 className="self-end bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg text-sm font-semibold"
                             >
                                 Post 💌
@@ -331,62 +377,86 @@ const page = () => {
                 }
 
                 <div className="grid grid-cols-3 gap-3">
+
                     {
-                        myPost ? myPost.slice().reverse().map((elem, index) => {
+                        post && post.slice().reverse().map((elem) => {
                             return (
-                                <div className="w-full h-auto max-w-xl bg-white rounded-2xl shadow-md border border-gray-200 p-4 space-y-4" key={index}>
+                                <div className="w-full h-auto max-w-xl bg-white rounded-2xl shadow-md border border-gray-200 p-4 space-y-4" key={elem._id}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <img
-                                                src={elem.userImage || "/no-image-icon-4.png"}
+                                                src={elem.userAvatar || "/no-image-icon-4.png"}
                                                 alt="User"
                                                 className="w-10 h-10 rounded-full object-cover border-2 border-blue-400"
                                             />
                                             <div>
                                                 <p className="font-semibold text-gray-800">{elem.username || "Unknown User"}</p>
-                                                <p className="text-xs text-gray-500">{new Date(elem.createdAt).toLocaleString()}</p>
+                                                <p className="text-xs text-gray-500">{format(elem.createdAt)}</p>
                                             </div>
                                         </div>
-                                        <button className="text-gray-400 hover:text-blue-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v.01M12 12v.01M12 18v.01" />
-                                            </svg>
-                                        </button>
+                                        <div className="relative">
+                                            <button className="text-gray-500 cursor-pointer hover:text-blue-600" onClick={() => setPostMenu(!postMenu)}>
+                                                <BsThreeDotsVertical />
+                                            </button>
+                                            {
+                                                postMenu && (
+                                                    <div className="absolute right-0 mt-2 w-40 flex flex-col items-start bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                                                        <button className="w-full flex items-center gap-x-1.5 text-black px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors" onClick={() => {
+                                                            setPostMenu(false);
+                                                            setEditPost(true);
+                                                        }}>
+                                                            <span><FaRegEdit /></span> Edit Post
+                                                        </button>
+                                                        <button className="w-full flex items-center gap-x-1.5 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors" onClick={() => {
+                                                            setPostMenu(false);
+                                                            setDeletePost(true);
+                                                        }}>
+                                                            <span><MdDelete /></span> Delete Post
+                                                        </button>
+                                                    </div>
+                                                )
+                                            }
+
+                                        </div>
                                     </div>
 
                                     {/* elem Text */}
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{elem.text}</p>
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{elem.content}</p>
 
                                     {/* elem Image */}
-                                    {elem.image && (
+                                    {elem.imageUrl && (elem.imageType === "video/mp4" ? (
+                                        <div className="w-full rounded-md overflow-hidden border border-blue-200">
+                                            <video controls className="w-full object-contain max-h-[400px] bg-gray-50">
+                                                <source src={elem.imageUrl} type='video/mp4' />
+                                            </video>
+                                        </div>
+                                    ) : (
                                         <div className="w-full rounded-md overflow-hidden border border-blue-200">
                                             <img
-                                                src={elem.image}
+                                                src={elem.imageUrl}
                                                 alt="Post content"
                                                 className="w-full object-contain max-h-[400px] bg-gray-50"
                                             />
-                                        </div>
-                                    )}
+                                        </div>))
+                                    }
 
                                     {/* Actions */}
-                                    <div className="flex justify-between text-sm text-gray-500 pt-2 border-t border-gray-200">
-                                        <button className="hover:text-blue-600">👍 Like</button>
-                                        <button className="hover:text-blue-600">💬 Comment</button>
-                                        <button className="hover:text-blue-600">↗️ Share</button>
+
+                                    <div className="grid grid-cols-3 items-center justify-center text-sm text-gray-500 pt-2 border-t border-gray-200">
+                                        <button className="hover:text-blue-600 cursor-pointer text-xl gap-x-1 flex items-center justify-center"><span className="mt-1 text-xs">{elem?.likes?.length} </span> <BiSolidLike /> </button>
+
+                                        <button className="hover:text-blue-600 cursor-pointer text-xl gap-x-1 flex items-center justify-center"><span className="-bg-conic-0mt-1 text-xs">{elem?.comments?.length} </span> <FaComment /> </button>
+
+                                        <button className="hover:text-blue-600 cursor-pointer text-xl gap-x-1 flex items-center justify-center"><span className="mt-1 text-xs">0 </span> <FaShare /> </button>
                                     </div>
                                 </div>
                             )
-                        }) : (
-                            <div className=""></div>
-                        )
+                        })
                     }
                 </div>
 
-
             </div>
-
-
 
         </div >
     )

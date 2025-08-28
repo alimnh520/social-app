@@ -51,7 +51,7 @@ const Provider = ({ children }) => {
 
     return (
         <div className='w-full h-auto overflow-x-hidden relative scroll-smooth' ref={mainDiv}>
-            <UserContext.Provider value={data}>
+            <UserContext.Provider value={{ data }} >
                 {!hideHeader.includes(path) && <Header />}
                 {children}
             </UserContext.Provider>

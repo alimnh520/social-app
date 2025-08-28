@@ -22,7 +22,8 @@ const bungeeTint = Bungee_Tint({
 
 const Header = () => {
     const [showMenu, setShowMenu] = useState(false);
-    const user = useContext(UserContext);
+    const context = useContext(UserContext);
+    const user = context?.data;
     const pathName = usePathname();
 
     const [lastScrollTop, setLastScrollTop] = useState(0);
