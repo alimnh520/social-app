@@ -57,6 +57,26 @@ const Header = () => {
                             <p className="px-1 text-sm flex items-center justify-center font-serif pb-1 bg-white rounded-md absolute -top-2.5 -right-2">{user?.notification.length > 99 ? '99+' : user?.notification}</p>
                         )}
                         <button className={`text-3xl`}><IoIosNotifications /></button>
+                        <div className="w-72 max-h-80 absolute top-10 font-serif hidden -left-28 hidden bg-white rounded-2xl shadow-lg border border-gray-200 p-4 overflow-y-auto">
+                            <ul className="w-full space-y-1">
+                                <li className="p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                    <p className="text-sm font-medium">New comment on your post</p>
+                                    <span className="text-xs text-gray-500">2 min ago</span>
+                                </li>
+                                <li className="p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                    <p className="text-sm font-medium">You have 3 new followers</p>
+                                    <span className="text-xs text-gray-500">10 min ago</span>
+                                </li>
+                                <li className="p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer">
+                                    <p className="text-sm font-medium">Your profile was updated</p>
+                                    <span className="text-xs text-gray-500">1 hr ago</span>
+                                </li>
+                            </ul>
+                            <div className="mt-4 text-center">
+                                <button className="text-sm text-blue-600 hover:underline">View all</button>
+                            </div>
+                        </div>
+
                     </div>
                     <div className="h-6 w-0.5 bg-[#d31158]"></div>
                     <Link href='/components/message' className={`text-[26px] ${pathName === '/components/search' && 'text-white'}`} onClick={() => setShowMenu(false)}><FaFacebookMessenger /></Link>

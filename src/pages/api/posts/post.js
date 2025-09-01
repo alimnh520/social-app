@@ -40,7 +40,7 @@ export default async function handler(req, res) {
                     imageType,
                     createdAt: new Date().toLocaleTimeString(),
                 });
-            }
+            }   
 
         } else {
             const userPost = new PostSchema({

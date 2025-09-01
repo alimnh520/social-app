@@ -1,164 +1,192 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { IoSearchSharp } from "react-icons/io5";
+import moment from "moment";
+import { ImCross } from "react-icons/im";
+import { UserContext } from "../Provider";
+import { IoIosArrowBack } from "react-icons/io";
 /** Messenger-like desktop layout (Tailwind only) */
 export default function MessengerDesktop() {
-    // Demo data (replace with your real data)
-    const me = useMemo(
-        () => ({
-            id: "me",
-            name: "You",
-            avatar: "https://i.pravatar.cc/120?img=15",
-        }),
-        []
-    );
 
-    const friend = useMemo(
-        () => ({
-            id: "u1",
-            name: "Nahid Hasan",
-            avatar: "https://i.pravatar.cc/120?img=32",
-            online: true,
-        }),
-        []
-    );
-
-    const [threads] = useState([
-        {
-            id: "t1",
-            user: friend,
-            last: "কাল দেখা হবে তো? 🙂",
-            unread: 2,
-            time: "9:41 PM",
-        },
-        {
-            id: "t2",
-            user: {
-                id: "u2",
-                name: "Sumi Akter",
-                avatar: "https://i.pravatar.cc/120?img=48",
-                online: false,
-            },
-            last: "Okay, got it!",
-            unread: 0,
-            time: "7:12 PM",
-        },
-    ]);
-
-    const [activeId, setActiveId] = useState("t1");
-
-    const [messages, setMessages] = useState([
-        {
-            id: "m1",
-            from: friend.id,
-            text: "হেই! কেমন আছো? 💙",
-            time: "9:38 PM",
-            date: "Today",
-        },
-        {
-            id: "m2",
-            from: me.id,
-            text: "ভাল! আগামীকাল কবে ফ্রি?",
-            time: "9:39 PM",
-            date: "Today",
-        },
-        {
-            id: "m3",
-            from: friend.id,
-            text: "দুপুর ৩টার পর 😄",
-            time: "9:40 PM",
-            date: "Today",
-        },
-        {
-            id: "m4",
-            from: me.id,
-            text: "পারফেক্ট. কাল দেখা হবে তো? 🙂",
-            time: "9:41 PM",
-            date: "Today",
-            seen: true,
-        },
-    ]);
-
+    const context = useContext(UserContext);
+    const user = context?.data;
+    const [history, setHistory] = useState([]);
+    const [chatUser, setChatUser] = useState("");
     const [input, setInput] = useState("");
-    const endRef = useRef(null);
-    const taRef = useRef(null);
+
+    const [searchUser, setSearchUser] = useState("");
+    const [isSearch, setIsSearch] = useState(false);
+    const [searchInput, setSearchInput] = useState("");
+
+    const [userMessage, setUserMessage] = useState("");
+    const [mobileView, setMobileView] = useState(false);
+
 
     useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, activeId]);
 
-    // autosize textarea (simple)
+        const userData = async () => {
+            try {
+                const res = await fetch('/api/message/user', {
+                    method: 'GET'
+                });
+                const data = await res.json();
+                if (data.success) setSearchUser(data.message);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        userData();
+
+        const messageHistory = async () => {
+            try {
+                const res = await fetch('/api/message/messageHistory', {
+                    method: 'GET'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setHistory(data.message);
+                    setChatUser(data.message[data.message.length - 1]);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        messageHistory();
+
+    }, []);
+
     useEffect(() => {
-        const el = taRef.current;
-        if (!el) return;
-        el.style.height = "0px";
-        el.style.height = Math.min(el.scrollHeight, 160) + "px";
-    }, [input]);
+        const userMessage = async () => {
+            try {
+                const res = await fetch('/api/message/userMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: chatUser?._id })
+                });
+                const data = await res.json();
+                if (data.success) setUserMessage(data.message);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        userMessage();
 
-    const send = () => {
-        const value = input.trim();
-        if (!value) return;
-        setMessages((m) => [
-            ...m,
-            {
-                id: crypto.randomUUID(),
-                from: me.id,
-                text: value,
-                time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                date: "Today",
-            },
-        ]);
-        setInput("");
-    };
+    }, [chatUser]);
+
+    const handleSendMessage = async () => {
+        try {
+            await fetch('/api/message/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: chatUser._id, text: input })
+            });
+            setInput("");
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const scrollRef = useRef(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [userMessage]);
 
     return (
-        <div className="h-screen w-full bg-gradient-to-br from-[#1f1c2c] to-[#928DAB] p-4">
-            <div className="mx-auto h-full max-w-6xl rounded-2xl bg-white/95 shadow-xl ring-1 ring-black/5 overflow-hidden flex">
+        <div className="h-screen w-full bg-gradient-to-br text-black
+         from-[#1f1c2c] to-[#928DAB] p-4">
+            <div className="mx-auto h-full max-w-5xl rounded-2xl bg-white/95 shadow-xl ring-1 ring-black/5 overflow-hidden flex" >
                 {/* Left: conversation list */}
                 <aside className="w-80 border-r border-gray-200 bg-white/70 backdrop-blur">
                     <div className="p-4 pb-2">
                         <h2 className="text-xl font-semibold">Chats</h2>
-                        <div className="mt-3">
+                        <div className="mt-3 flex relative">
                             <input
                                 type="text"
                                 placeholder="Search Messenger"
-                                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+                                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+                                value={searchInput}
+                                onFocus={() => setIsSearch(true)}
+                                onChange={(e) => { setSearchInput(e.target.value) }}
                             />
+
+                            {isSearch && (<div className="w-72 max-h-80 bg-white absolute z-10 top-10 left-0 rounded-2xl shadow-lg border border-gray-200 p-4 flex flex-col space-y-2 overflow-y-auto pb-9">
+
+                                <button className=" absolute -bottom-1 cursor-pointer left-1/2 -translate-x-1/2 text-sm size-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-700" onClick={() => setIsSearch(false)}><ImCross /></button>
+
+                                {searchUser && searchUser.filter((key) => key.username.toLowerCase().includes(searchInput.toLowerCase())).slice().reverse().map((elem) => {
+
+                                    return (
+                                        <div key={elem._id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 cursor-pointer" onClick={() => {
+                                            !history?.some(u => u._id === elem._id) && history.push(elem);
+                                            setChatUser(elem);
+                                            setMobileView(true);
+                                            setIsSearch(false);
+                                        }}>
+                                            <img
+                                                src={elem.image}
+                                                alt={elem.username}
+                                                className="h-10 w-10 rounded-full object-cover"
+                                            />
+                                            <div className="leading-tight flex flex-col">
+                                                <p className="font-semibold text-sm">{elem._id === user._id ? 'You' : elem.username}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {elem.online ? (
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                                            Active now
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <span className="h-2 w-2 rounded-full bg-gray-400" />
+                                                            Offline
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            )}
+
                         </div>
                     </div>
                     <div className="h-[calc(100%-92px)] overflow-y-auto">
-                        {threads.map((t) => (
-                            <button
-                                key={t.id}
-                                onClick={() => setActiveId(t.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${activeId === t.id ? "bg-indigo-50" : ""
-                                    }`}
-                            >
-                                <div className="relative">
-                                    <img
-                                        src={t.user.avatar}
-                                        alt={t.user.name}
-                                        className="h-11 w-11 rounded-full object-cover"
-                                    />
-                                    {t.user.online && (
+                        {history && history.slice().reverse().map((elem) => {
+                            return (
+                                <button
+                                    key={elem._id}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${chatUser?._id === elem._id && 'bg-indigo-50'}`}
+                                    onClick={() => {
+                                        setChatUser(elem);
+                                        setMobileView(true);
+                                    }}
+                                >
+                                    <div className="relative">
+                                        <img
+                                            src={elem.image}
+                                            alt={elem.username}
+                                            className="h-11 w-11 rounded-full object-cover"
+                                        />
                                         <span className="absolute -bottom-0 -right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-                                    )}
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className="truncate font-medium">{t.user.name}</p>
-                                        <span className="text-xs text-gray-500">{t.time}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <p className="truncate text-sm text-gray-600">{t.last}</p>
-                                        {t.unread > 0 && (
+                                    <div className="min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="truncate font-medium">{elem._id === user._id ? 'You' : elem.username}</p>
+                                            <span className="text-xs text-gray-500">10 minute ago</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="truncate text-sm text-gray-600">How are you</p>
                                             <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-600 px-1.5 text-[10px] font-bold text-white">
-                                                {t.unread}
+                                                5
                                             </span>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
-                        ))}
+                                </button>
+                            )
+                        })}
                     </div>
                 </aside>
 
@@ -166,15 +194,20 @@ export default function MessengerDesktop() {
                 <main className="flex-1 flex flex-col">
                     {/* Chat header */}
                     <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-200 bg-white/80 px-5 py-3 backdrop-blur">
+
+                        <button className={`text-2xl transition-all duration-300`} onClick={() => setMobileView(false)}>
+                            <IoIosArrowBack />
+                        </button>
+
                         <img
-                            src={friend.avatar}
+                            src={chatUser?.image}
                             className="h-10 w-10 rounded-full object-cover"
-                            alt={friend.name}
+                            alt={chatUser?.username}
                         />
                         <div className="leading-tight">
-                            <p className="font-semibold">{friend.name}</p>
+                            <p className="font-semibold">{chatUser?._id === user._id ? 'You' : chatUser?.username}</p>
                             <p className="text-xs text-gray-500">
-                                {friend.online ? (
+                                {chatUser?.online ? (
                                     <span className="inline-flex items-center gap-1">
                                         <span className="h-2 w-2 rounded-full bg-emerald-500" /> Active now
                                     </span>
@@ -191,50 +224,49 @@ export default function MessengerDesktop() {
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto bg-[url('https://i.ibb.co/88b1pVb/messenger-bg.png')] bg-[length:400px]">
-                        <div className="mx-auto max-w-3xl px-4 py-6">
+                    <div className="flex-1 overflow-y-auto home bg-[url('https://i.ibb.co/88b1pVb/messenger-bg.png')] bg-[length:400px]" ref={scrollRef}>
+                        <div className="mx-auto max-w-3xl px-4">
                             {/* Date separator */}
                             <DateDivider label="Today" />
-                            {messages.map((m, i) => {
-                                const isMe = m.from === me.id;
-                                const showSeen = isMe && m.seen && i === messages.length - 1;
+                            {userMessage && userMessage.map((message) => {
                                 return (
-                                    <div key={m.id} className={`mb-2 flex ${isMe ? "justify-end" : "justify-start"}`}>
-                                        <div className={`flex max-w-[70%] items-end gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
-                                            {!isMe && (
-                                                <img
-                                                    src={friend.avatar}
-                                                    className="h-8 w-8 rounded-full object-cover"
-                                                    alt=""
-                                                />
-                                            )}
+                                    <div key={message._id} className={`mb-2 flex ${message.senderId === user._id ? "justify-end" : "justify-start"}`}>
+                                        <div className={`flex max-w-[70%] items-end gap-2 ${user?.senderId ? "flex-row-reverse" : ""}`}>
+                                            {
+                                                message.senderId !== user._id && (
+                                                    <img
+                                                        src={chatUser?.image}
+                                                        className="h-8 w-8 rounded-full object-cover"
+                                                        alt=""
+                                                    />
+                                                )
+                                            }
                                             <div
-                                                className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${isMe
+                                                className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${message.senderId === user._id
                                                     ? "bg-indigo-600 text-white rounded-br-md"
                                                     : "bg-gray-100 text-gray-900 rounded-bl-md"
                                                     }`}
                                             >
-                                                <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                                                <p className="whitespace-pre-wrap break-words">{message.text}</p>
                                                 <div
-                                                    className={`mt-1 select-none text-[10px] ${isMe ? "text-indigo-200" : "text-gray-500"
+                                                    className={`mt-1 select-none text-[10px] ${message.senderId === user._id ? "text-indigo-200" : "text-gray-500"
                                                         }`}
                                                 >
-                                                    {m.time}
+                                                    {moment(message.createdAt).format("h:mm A")}
                                                 </div>
                                             </div>
-                                            {showSeen && (
+                                            {/* {showSeen && (
                                                 <img
-                                                    src={friend.avatar}
+                                                    src={chatUser?.image}
                                                     title="Seen"
                                                     className="h-4 w-4 rounded-full ring-2 ring-white"
                                                     alt="seen"
                                                 />
-                                            )}
+                                            )} */}
                                         </div>
                                     </div>
                                 );
                             })}
-                            <div ref={endRef} />
                         </div>
                     </div>
 
@@ -243,14 +275,13 @@ export default function MessengerDesktop() {
                         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl bg-gray-50 p-2 ring-1 ring-gray-200 focus-within:ring-indigo-400">
                             <IconBtn icon="➕" title="Add" />
                             <textarea
-                                ref={taRef}
                                 rows={1}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter" && !e.shiftKey) {
                                         e.preventDefault();
-                                        send();
+                                        handleSendMessage();
                                     }
                                 }}
                                 placeholder="Aa"
@@ -258,28 +289,14 @@ export default function MessengerDesktop() {
                             />
                             <IconBtn icon="😊" title="Emoji" />
                             <button
-                                onClick={send}
-                                className="inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 active:scale-[.98]"
+                                onClick={handleSendMessage}
+                                className={`inline-flex h-9 ${input ? 'pointer-events-auto bg-indigo-700' : 'pointer-events-none bg-indigo-500'} items-center justify-center rounded-xl px-4 text-sm font-semibold text-white active:scale-[.98]`}
                             >
                                 Send
                             </button>
                         </div>
                     </div>
                 </main>
-
-                {/* Right: details panel (optional) */}
-                <aside className="hidden w-80 shrink-0 border-l border-gray-200 bg-white/70 p-4 lg:block">
-                    <div className="flex flex-col items-center">
-                        <img src={friend.avatar} className="h-20 w-20 rounded-full object-cover" alt="" />
-                        <h3 className="mt-3 text-lg font-semibold">{friend.name}</h3>
-                        <p className="text-xs text-gray-500">{friend.online ? "Active now" : "Offline"}</p>
-                    </div>
-                    <div className="mt-6 space-y-3">
-                        <Section title="Nickname" value="Edit…" />
-                        <Section title="Color" value="Indigo" />
-                        <Section title="Notifications" value="Default" />
-                    </div>
-                </aside>
             </div>
         </div>
     );
