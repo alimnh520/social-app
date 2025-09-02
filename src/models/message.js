@@ -1,30 +1,35 @@
 const { default: mongoose } = require("mongoose");
 
 const messageSchema = new mongoose.Schema({
+    conversationId: {
+        type: String,
+        required: true
+    },
     senderId: {
         type: String,
-        ref: "User", // কে পাঠালো
+        ref: "User",
         required: true,
     },
     receiverId: {
         type: String,
-        ref: "User", // কাকে পাঠানো হলো
+        ref: "User",
         required: true,
     },
     text: {
-        type: String, // মেসেজ টেক্সট
+        type: String,
         trim: true,
     },
     attachments: [
         {
-            url: String,   // ফাইল / ইমেজ এর লিংক
+            url: String,  
             type: String,
-            url_id: String  // image, video, file ইত্যাদি
+            url_id: String 
         },
     ],
+    
     isRead: {
         type: Boolean,
-        default: false, // unread = false
+        default: false,
     },
 }, { timestamps: true });
 

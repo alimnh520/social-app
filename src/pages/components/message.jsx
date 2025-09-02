@@ -20,12 +20,11 @@ export default function MessengerDesktop() {
     const [userMessage, setUserMessage] = useState("");
     const [mobileView, setMobileView] = useState(false);
 
-
     useEffect(() => {
 
         const userData = async () => {
             try {
-                const res = await fetch('/api/message/user', {
+                const res = await fetch('/api/message/all-user', {
                     method: 'GET'
                 });
                 const data = await res.json();
@@ -38,14 +37,11 @@ export default function MessengerDesktop() {
 
         const messageHistory = async () => {
             try {
-                const res = await fetch('/api/message/messageHistory', {
+                const res = await fetch('/api/message/userMessage', {
                     method: 'GET'
                 });
                 const data = await res.json();
-                if (data.success) {
-                    setHistory(data.message);
-                    setChatUser(data.message[data.message.length - 1]);
-                }
+                if (data.success) setHistory(data.message);
             } catch (error) {
                 console.log(error);
             }
@@ -53,6 +49,9 @@ export default function MessengerDesktop() {
         messageHistory();
 
     }, []);
+
+    console.log(chatUser)
+
 
     useEffect(() => {
         const userMessage = async () => {
@@ -64,6 +63,7 @@ export default function MessengerDesktop() {
                 });
                 const data = await res.json();
                 if (data.success) setUserMessage(data.message);
+
             } catch (error) {
                 console.log(error);
             }
@@ -119,8 +119,7 @@ export default function MessengerDesktop() {
 
                                     return (
                                         <div key={elem._id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 cursor-pointer" onClick={() => {
-                                            !history?.some(u => u._id === elem._id) && history.push(elem);
-                                            setChatUser(elem);
+                                            !history?.some(u => u.members[1] === elem._id) && setHistory((prev) => [...prev, { members: ['', elem._id] }]);
                                             setMobileView(true);
                                             setIsSearch(false);
                                         }}>
@@ -154,44 +153,46 @@ export default function MessengerDesktop() {
                         </div>
                     </div>
                     <div className="h-[calc(100%-92px)] overflow-y-auto">
-                        {history && history.slice().reverse().map((elem) => {
-                            return (
-                                <button
-                                    key={elem._id}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${chatUser?._id === elem._id && 'bg-indigo-50'}`}
-                                    onClick={() => {
-                                        setChatUser(elem);
-                                        setMobileView(true);
-                                    }}
-                                >
-                                    <div className="relative">
-                                        <img
-                                            src={elem.image}
-                                            alt={elem.username}
-                                            className="h-11 w-11 rounded-full object-cover"
-                                        />
-                                        <span className="absolute -bottom-0 -right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <p className="truncate font-medium">{elem._id === user._id ? 'You' : elem.username}</p>
-                                            <span className="text-xs text-gray-500">10 minute ago</span>
+                        {history && history?.slice().reverse().map((user) => (
+                            searchUser && searchUser?.filter((find) => find._id === user.members[1]).map((elem) => {
+                                return (
+                                    <button
+                                        key={elem._id}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${elem._id === chatUser?._id && 'bg-indigo-50'}`}
+                                        onClick={() => {
+                                            setChatUser(elem);
+                                            setMobileView(true);
+                                        }}
+                                    >
+                                        <div className="relative">
+                                            <img
+                                                src={elem.image}
+                                                alt={elem.username}
+                                                className="h-11 w-11 rounded-full object-cover"
+                                            />
+                                            <span className="absolute -bottom-0 -right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <p className="truncate text-sm text-gray-600">How are you</p>
-                                            <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-600 px-1.5 text-[10px] font-bold text-white">
-                                                5
-                                            </span>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="truncate font-medium">{elem.username}</p>
+                                                <span className="text-xs text-gray-500">{moment(user.updatedAt).format("h:mm A")}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="truncate text-sm text-gray-600">{user.lastMessage}</p>
+                                                <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-600 px-1.5 text-[10px] font-bold text-white">
+                                                    5
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </button>
-                            )
-                        })}
+                                    </button>
+                                )
+                            })
+                        ))}
                     </div>
                 </aside>
 
                 {/* Center: chat thread */}
-                <main className="flex-1 flex flex-col">
+                {chatUser ? (<main className="flex-1 flex flex-col">
                     {/* Chat header */}
                     <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-200 bg-white/80 px-5 py-3 backdrop-blur">
 
@@ -297,6 +298,7 @@ export default function MessengerDesktop() {
                         </div>
                     </div>
                 </main>
+                ) : <div className="flex flex-1 items-center justify-center">Nothing...</div>}
             </div>
         </div>
     );
