@@ -41,7 +41,10 @@ export default function MessengerDesktop() {
                     method: 'GET'
                 });
                 const data = await res.json();
-                if (data.success) setHistory(data.message);
+                if (data.success) {
+                    setHistory(data.message);
+
+                }
             } catch (error) {
                 console.log(error);
             }
@@ -50,8 +53,15 @@ export default function MessengerDesktop() {
 
     }, []);
 
-    console.log(chatUser)
 
+    const result = searchUser && searchUser?.filter(find =>
+        history?.map(user => user.members[1] === find._id)
+    );
+
+
+    const resultMessage = searchUser && searchUser?.filter(find =>
+        history?.map(user => user.members[1] === find._id)
+    );
 
     useEffect(() => {
         const userMessage = async () => {
@@ -71,6 +81,25 @@ export default function MessengerDesktop() {
         userMessage();
 
     }, [chatUser]);
+
+    useEffect(() => {
+        const userMessage = async () => {
+            try {
+                const res = await fetch('/api/message/userMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: history[history?.length - 1]?.members[1] })
+                });
+                const data = await res.json();
+                if (data.success) setUserMessage(data.message);
+
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        userMessage();
+
+    }, [history]);
 
     const handleSendMessage = async () => {
         try {
@@ -92,6 +121,7 @@ export default function MessengerDesktop() {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [userMessage]);
+
 
     return (
         <div className="h-screen w-full bg-gradient-to-br text-black
@@ -115,11 +145,12 @@ export default function MessengerDesktop() {
 
                                 <button className=" absolute -bottom-1 cursor-pointer left-1/2 -translate-x-1/2 text-sm size-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-700" onClick={() => setIsSearch(false)}><ImCross /></button>
 
-                                {searchUser && searchUser.filter((key) => key.username.toLowerCase().includes(searchInput.toLowerCase())).slice().reverse().map((elem) => {
+                                {searchUser && searchUser.filter((key) => key.username.toLowerCase().includes(searchInput.toLowerCase()) && key._id !== user._id).slice().reverse().map((elem) => {
 
                                     return (
                                         <div key={elem._id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 cursor-pointer" onClick={() => {
                                             !history?.some(u => u.members[1] === elem._id) && setHistory((prev) => [...prev, { members: ['', elem._id] }]);
+                                            setChatUser(elem);
                                             setMobileView(true);
                                             setIsSearch(false);
                                         }}>
@@ -158,7 +189,9 @@ export default function MessengerDesktop() {
                                 return (
                                     <button
                                         key={elem._id}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${elem._id === chatUser?._id && 'bg-indigo-50'}`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${elem._id === chatUser?._id && 'bg-indigo-50'
+                                            } ${elem._id === history[history?.length - 1]?.members[1] && 'bg-indigo-50'
+                                            }`}
                                         onClick={() => {
                                             setChatUser(elem);
                                             setMobileView(true);
@@ -192,7 +225,7 @@ export default function MessengerDesktop() {
                 </aside>
 
                 {/* Center: chat thread */}
-                {chatUser ? (<main className="flex-1 flex flex-col">
+                <main className="flex-1 flex flex-col">
                     {/* Chat header */}
                     <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-200 bg-white/80 px-5 py-3 backdrop-blur">
 
@@ -201,12 +234,12 @@ export default function MessengerDesktop() {
                         </button>
 
                         <img
-                            src={chatUser?.image}
+                            src={chatUser ? chatUser?.image : result[0]?.image}
                             className="h-10 w-10 rounded-full object-cover"
-                            alt={chatUser?.username}
+                            alt={chatUser ? chatUser?.username : result[0]?.username}
                         />
                         <div className="leading-tight">
-                            <p className="font-semibold">{chatUser?._id === user._id ? 'You' : chatUser?.username}</p>
+                            <p className="font-semibold">{chatUser ? chatUser?.username : result[0]?.username}</p>
                             <p className="text-xs text-gray-500">
                                 {chatUser?.online ? (
                                     <span className="inline-flex items-center gap-1">
@@ -269,10 +302,10 @@ export default function MessengerDesktop() {
                                 );
                             })}
                         </div>
-                    </div>
+                    </div >
 
                     {/* Composer */}
-                    <div className="border-t border-gray-200 bg-white/80 p-3">
+                    < div className="border-t border-gray-200 bg-white/80 p-3" >
                         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl bg-gray-50 p-2 ring-1 ring-gray-200 focus-within:ring-indigo-400">
                             <IconBtn icon="➕" title="Add" />
                             <textarea
@@ -296,11 +329,10 @@ export default function MessengerDesktop() {
                                 Send
                             </button>
                         </div>
-                    </div>
-                </main>
-                ) : <div className="flex flex-1 items-center justify-center">Nothing...</div>}
-            </div>
-        </div>
+                    </div >
+                </main >
+            </div >
+        </div >
     );
 }
 
